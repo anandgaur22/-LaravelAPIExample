@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\UserRegister;
 use Validator;
-use Auth;
 
 class ApiController extends Controller
 {
@@ -180,21 +181,29 @@ class ApiController extends Controller
 
             return response()->json(["status" =>"false","message" =>"Enter all field required first"],400);
         }
-
-        $userRegister = $request->only('email', 'password');
-
-        if (Auth::attempt($userRegister)) {
-            return response()->json(["status" =>"true","message" =>"You are login successfully","data" =>$userRegister->only(['id','name', 'email', 'mobile_no'])],200);
-
-        }
-
+        
+        
        // $userRegister = $request->UserRegister(); 
+        $userRegister = UserRegister::where('email', $request->email)->first();
 
-      //  $userRegister->email =$request->input('email');
-       // $userRegister->password=$request->input('password');
+        $userRegister->email =$request->input('email');
+        $userRegister->password=$request->input('password');
     
-       // $userRegister->save();
-      
+        if ($userRegister) {
+            if (Hash::check($request->password, $userRegister->password)) {
+
+                $response = ["status" =>"false","message" => "Password mismatch"];
+                return response($response, 422);
+
+            } else {
+               
+                return response()->json(["status" =>"true","message" =>"You are login successfully","data" =>$userRegister->only(['id','name', 'email', 'mobile_no'])],200);
+
+            }
+        } else {
+            $response = ["status" =>"false","message" =>'User does not exist'];
+            return response($response, 422);
+        }
    
     }
 
