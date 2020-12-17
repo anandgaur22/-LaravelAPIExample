@@ -207,4 +207,60 @@ class ApiController extends Controller
    
     }
 
+
+    public  function changePassword(Request $request)
+    {
+        $rules = [
+            'password' => 'required',
+            'id' => 'required'
+        ];
+
+        $validator = Validator::make($request->all(),$rules);
+
+        if($validator->fails()){
+
+            return response()->json(["status" =>"false","message" =>"Enter all field required first"],400);
+        }
+
+        $id=$request->input('id');
+
+        $userRegister = UserRegister::where(['id'=>$id])->first();
+
+        if(is_null($userRegister)){
+            return response()->json(["status" =>"false","message" =>"User Record not found"],404);
+        }
+    
+        $userRegister->password=bcrypt($request->input('password'));
+
+        $userRegister->update();
+      
+         return response()->json(["status" =>"true","message" =>"Your password update successfully"],200);
+   
+    }
+
+
+    public  function forgotPassword(Request $request)
+    {
+
+        $userRegister = request()->validate(['email' => 'required|email']);
+
+        UserRegister::sendResetLink($userRegister);
+
+        return response()->json(["status" =>"true","message" => 'Reset password link sent on your email id.'],200);
+ 
+
+    }
+
+
+    public function reset(ResetPasswordRequest $request) {
+        $reset_password_status = UserRegister::reset($request->validated(), function ($userRegister, $password) {
+            $userRegister->password = $password;
+            $userRegister->save();
+        });
+
+       
+        return $this->respondWithMessage("Password has been successfully changed");
+    }
+
+
 }

@@ -25,3 +25,6 @@ Route::put('/userUpdate/{id}','ApiController@userUpdatebyId');
 Route::get('/userDelete/{id}','ApiController@userDeletebyId');
 Route::post('/userUpdate','ApiController@userUpdate');
 Route::post('/userLogin','ApiController@userLogin');
+Route::post('/changePassword','ApiController@changePassword');
+Route::post('/forgotPassword','ApiController@forgotPassword');
+Route::post('/reset', 'ApiController@reset');
