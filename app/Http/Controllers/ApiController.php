@@ -57,13 +57,12 @@ class ApiController extends Controller
 
         $userRegister->name =$request->input('name');
         $userRegister->email=$request->input('email');
-        $userRegister->password=$request->input('password');
+        $userRegister->password=bcrypt($request->input('password'));
         $userRegister->mobile_no=$request->input('mobile_no');
         $userRegister->device_type=$request->input('device_type');
         $userRegister->device_id=$request->input('device_id');
         $userRegister->device_token=$request->input('device_token');
 
-      
         $userRegister->save();
    
         return response()->json(["status" =>"true","message" =>"You are register successfully","data" =>$userRegister->only(['id', 'name', 'email', 'mobile_no'])],200);
@@ -172,7 +171,10 @@ class ApiController extends Controller
         
         $rules = [
             'email' => 'required',
-            'password' => 'required'
+            'password' => 'required',
+            'device_type' => 'required',
+            'device_id' => 'required',
+            'device_token' => 'required'
         ];
 
         $validator = Validator::make($request->all(),$rules);
@@ -181,28 +183,26 @@ class ApiController extends Controller
 
             return response()->json(["status" =>"false","message" =>"Enter all field required first"],400);
         }
-        
-        
-       // $userRegister = $request->UserRegister(); 
         $userRegister = UserRegister::where('email', $request->email)->first();
 
-        $userRegister->email =$request->input('email');
-        $userRegister->password=$request->input('password');
-    
         if ($userRegister) {
             if (Hash::check($request->password, $userRegister->password)) {
 
-                $response = ["status" =>"false","message" => "Password mismatch"];
-                return response($response, 422);
+                $userRegister->device_type =$request->input('device_type');
+                $userRegister->device_id=$request->input('device_id');
+                $userRegister->device_token=$request->input('device_token');
+                $userRegister->save();
+
+                return response()->json(["status" =>"true","message" =>"You are login successfully","data" =>$userRegister->only(['id','name', 'email', 'mobile_no'])],200);
 
             } else {
                
-                return response()->json(["status" =>"true","message" =>"You are login successfully","data" =>$userRegister->only(['id','name', 'email', 'mobile_no'])],200);
-
+                return response()->json(["status" =>"false","message" => "Your password is incorrect"],404);
+                
             }
         } else {
-            $response = ["status" =>"false","message" =>'User does not exist'];
-            return response($response, 422);
+            return response()->json(["status" =>"false","message" => "You are not register"],404);
+
         }
    
     }
